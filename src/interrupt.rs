@@ -8,7 +8,7 @@ pub struct RISCVMutex<T> {
 }
 
 impl<T> RISCVMutex<T> {
-    pub fn new(data: T) -> Self {
+    pub const fn new(data: T) -> Self {
         Self { data: data }
     }
 }
