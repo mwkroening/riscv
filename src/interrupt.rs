@@ -1,8 +1,25 @@
 //! Interrupts
 
-// NOTE: Adapted from cortex-m/src/interrupt.rs
-pub use bare_metal::{CriticalSection, Mutex, Nr};
 use register::mstatus;
+use mutex_trait::Mutex;
+
+pub struct RISCVMutex<T> {
+    data: T
+}
+
+impl<T> RISCVMutex<T> {
+    pub fn new(data: T) -> Self {
+        Self { data: data }
+    }
+}
+
+impl<T> Mutex for RISCVMutex<T> {
+    type Data = T;
+
+    fn lock<R>(&mut self, f: impl FnOnce(&mut T) -> R) -> R {
+        free(|| {f(&mut self.data)})
+    }
+}
 
 /// Disables all interrupts
 #[inline]
@@ -35,14 +52,14 @@ pub unsafe fn enable() {
 /// This as also known as a "critical section".
 pub fn free<F, R>(f: F) -> R
 where
-    F: FnOnce(&CriticalSection) -> R,
+    F: FnOnce() -> R,
 {
     let mstatus = mstatus::read();
 
     // disable interrupts
     unsafe { disable(); }
 
-    let r = f(unsafe { &CriticalSection::new() });
+    let r = f();
 
     // If the interrupts were active before our `disable` call, then re-enable
     // them. Otherwise, keep them disabled

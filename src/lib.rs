@@ -19,8 +19,8 @@
 #![deny(warnings)]
 #![cfg_attr(feature = "inline-asm", feature(asm))]
 
-extern crate bare_metal;
 extern crate bit_field;
+extern crate mutex_trait;
 
 pub mod asm;
 pub mod interrupt;
