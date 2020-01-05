@@ -2,6 +2,7 @@
 
 use register::mstatus;
 use mutex_trait::Mutex;
+use core::cell::RefCell;
 
 pub struct RISCVMutex<T> {
     data: T
@@ -9,7 +10,11 @@ pub struct RISCVMutex<T> {
 
 impl<T> RISCVMutex<T> {
     pub const fn new(data: T) -> Self {
-        Self { data: data }
+        Self { data }
+    }
+
+    fn access(&self) -> &T {
+        &self.data
     }
 }
 
@@ -18,6 +23,14 @@ impl<T> Mutex for RISCVMutex<T> {
 
     fn lock<R>(&mut self, f: impl FnOnce(&mut T) -> R) -> R {
         free(|| {f(&mut self.data)})
+    }
+}
+
+impl<'a, T> Mutex for &'a RISCVMutex<RefCell<T>> {
+    type Data = T;
+
+    fn lock<R>(&mut self, f: impl FnOnce(&mut T) -> R) -> R {
+        free(|| {f(&mut *self.access().borrow_mut())})
     }
 }
 
