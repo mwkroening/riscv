@@ -8,6 +8,8 @@ pub struct RISCVMutex<T> {
     data: T
 }
 
+unsafe impl<T> Sync for RISCVMutex<T> {}
+
 impl<T> RISCVMutex<T> {
     pub const fn new(data: T) -> Self {
         Self { data }
